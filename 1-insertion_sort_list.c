@@ -2,71 +2,80 @@
 #include <stdlib.h>
 
 /**
- * listint_len - Calculates the length of a doubly linked list
- * @list: Pointer to the head of the list
- * Return: Length of the list
+ * swap - Swaps two nodes in a doubly linked list
+ * @unsorted: Pointer to a pointer to the unsorted node
+ * @sorted: Pointer to a pointer to the sorted node
+ * Return: Pointer to the new position of the unsorted node
  */
-size_t listint_len(const listint_t *list)
+listint_t *swap(listint_t **unsorted, listint_t **sorted)
 {
-	size_t count = 0;
-	const listint_t *current = list;
+	listint_t *tmp;
 
-	while (current != NULL)
+	tmp = (*unsorted)->next;
+
+	if (*sorted != NULL)
+		(*sorted)->next = tmp;
+
+	if (tmp != NULL)
+		tmp->prev = *sorted;
+
+	if (*unsorted != NULL)
 	{
-		count++;
-		current = current->next;
+		(*unsorted)->next = *sorted;
+		(*unsorted)->prev = (*sorted)->prev;
 	}
 
-	return count;
+	if ((*sorted)->prev != NULL)
+		(*sorted)->prev->next = *unsorted;
+
+	(*sorted)->prev = *unsorted;
+
+	return (*unsorted);
 }
 
 /**
  * insertion_sort_list - Sorts a doubly linked list of integers using
- *                        the insertion sort algorithm
+ *                       the insertion sort algorithm
  * @list: Pointer to the head of the list
  */
 void insertion_sort_list(listint_t **list)
 {
+	listint_t *unsorted;
+	listint_t *sorted;
+
 	if (list == NULL || *list == NULL || (*list)->next == NULL)
 		return;
 
-	listint_t *sorted;
-	listint_t *unsorted = *list;
-	listint_t *current;
-	listint_t *temp;
+	sorted = *list;
+	unsorted = (*list)->next;
 
 	while (unsorted != NULL)
 	{
-		current = unsorted;
-
-		unsorted = unsorted->next;
-
-		sorted = NULL;
-
-		if (sorted == NULL || current->n < sorted->n)
+		if (sorted != NULL && unsorted->n < sorted->n)
 		{
-			current->next = sorted;
-			if (sorted != NULL)
-				sorted->prev = current;
-			sorted = current;
+			unsorted = swap(&unsorted, &sorted);
+			sorted = unsorted->prev;
+
+			if (sorted == NULL)
+				*list = unsorted;
+
+			print_list(*list);
+
+			while (sorted != NULL && unsorted->n < sorted->n)
+			{
+				unsorted = swap(&unsorted, &sorted);
+				sorted = unsorted->prev;
+
+				if (sorted == NULL)
+					*list = unsorted;
+
+				print_list(*list);
+			}
 		}
 		else
 		{
-			temp = sorted;
-
-			while (temp->next != NULL && temp->next->n < current->n)
-				temp = temp->next;
-
-			current->next = temp->next;
-			if (temp->next != NULL)
-				temp->next->prev = current;
-			temp->next = current;
-			current->prev = temp;
+			sorted = unsorted;
+			unsorted = sorted->next;
 		}
-
-		if (current->prev == NULL)
-			*list = current;
-
-		print_list(*list);
 	}
 }
